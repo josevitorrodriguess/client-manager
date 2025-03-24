@@ -1,10 +1,14 @@
 package auth
 
-import "github.com/go-playground/validator/v10"
+import (
+	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
+)
 
 type Auth struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
+	Id       *uuid.UUID `json:"id"`
+	Email    string     `json:"email" validate:"required,email"`
+	Password string     `json:"password" validate:"required"`
 }
 
 func ValidateAuth(auth *Auth) error {
