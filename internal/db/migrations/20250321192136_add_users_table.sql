@@ -4,14 +4,13 @@ SELECT 'up SQL query';
 -- +goose StatementEnd
 
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL
 );
 
--- Inserir o usuário admin automaticamente (com senha hashada, substitua pelo hash real)
-INSERT INTO users (email, password)
-VALUES ('admin@admin.com', 'hashedPass');
+
 
 -- +goose Down
 -- +goose StatementBegin
