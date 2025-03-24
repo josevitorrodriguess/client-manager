@@ -4,7 +4,7 @@ sql:
     queries: "internal/db/sql/queries.sql"
     gen:
       go:
-        package: "db"
+        package: "sqlc"
         out: "internal/db/sqlc"
     database:
       uri: "postgres://postgres:postgres@localhost:5580/client-manager?sslmode=disable"
