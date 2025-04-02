@@ -7,40 +7,28 @@ package sqlc
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (name, email, password) 
 VALUES ($1, $2, $3)
-RETURNING id, name, email, password
+RETURNING id
 `
 
 type CreateUserParams struct {
-	Column1 sql.NullString
-	Column2 sql.NullString
-	Column3 sql.NullString
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
-type CreateUserRow struct {
-	ID       uuid.UUID
-	Name     string
-	Email    string
-	Password string
-}
-
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
-	row := q.db.QueryRowContext(ctx, createUser, arg.Column1, arg.Column2, arg.Column3)
-	var i CreateUserRow
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Email,
-		&i.Password,
-	)
-	return i, err
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, createUser, arg.Name, arg.Email, arg.Password)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const deleteUser = `-- name: DeleteUser :exec
@@ -48,9 +36,44 @@ DELETE FROM users
 WHERE id = $1
 `
 
-func (q *Queries) DeleteUser(ctx context.Context, dollar_1 uuid.NullUUID) error {
-	_, err := q.db.ExecContext(ctx, deleteUser, dollar_1)
+func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteUser, id)
 	return err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT 
+    id,
+    name,
+    email,
+    password,
+    created_at,
+    updated_at
+FROM users
+WHERE email = $1
+`
+
+type GetUserByEmailRow struct {
+	ID        uuid.UUID          `json:"id"`
+	Name      string             `json:"name"`
+	Email     string             `json:"email"`
+	Password  string             `json:"password"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
+	row := q.db.QueryRow(ctx, getUserByEmail, email)
+	var i GetUserByEmailRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.Password,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const updateUser = `-- name: UpdateUser :one
@@ -61,24 +84,24 @@ RETURNING id, name, email
 `
 
 type UpdateUserParams struct {
-	Column1 sql.NullString
-	Column2 sql.NullString
-	Column3 sql.NullString
-	Column4 uuid.NullUUID
+	Name     string    `json:"name"`
+	Email    string    `json:"email"`
+	Password string    `json:"password"`
+	ID       uuid.UUID `json:"id"`
 }
 
 type UpdateUserRow struct {
-	ID    uuid.UUID
-	Name  string
-	Email string
+	ID    uuid.UUID `json:"id"`
+	Name  string    `json:"name"`
+	Email string    `json:"email"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error) {
-	row := q.db.QueryRowContext(ctx, updateUser,
-		arg.Column1,
-		arg.Column2,
-		arg.Column3,
-		arg.Column4,
+	row := q.db.QueryRow(ctx, updateUser,
+		arg.Name,
+		arg.Email,
+		arg.Password,
+		arg.ID,
 	)
 	var i UpdateUserRow
 	err := row.Scan(&i.ID, &i.Name, &i.Email)

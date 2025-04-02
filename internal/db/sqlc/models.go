@@ -3,3 +3,18 @@
 //   sqlc v1.26.0
 
 package sqlc
+
+import (
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
+)
+
+type User struct {
+	ID        uuid.UUID          `json:"id"`
+	Name      string             `json:"name"`
+	Email     string             `json:"email"`
+	IsAdmin   bool               `json:"is_admin"`
+	Password  string             `json:"password"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
