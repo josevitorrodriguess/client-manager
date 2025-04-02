@@ -1,9 +1,10 @@
 package db
 
 import (
-	"database/sql"
+	"context"
+	"fmt"
 
-	"github.com/josevitorrodriguess/client-manager/internal/config/logger"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const (
@@ -14,15 +15,16 @@ const (
 	DB_NAME     = "DB_NAME"
 )
 
-func ConnectDB() *sql.DB {
-	db, err := sql.Open("postgres", "user="+DB_USER+" password="+DB_PASSWORD+" host="+DB_HOST+" port="+DB_PORT+" dbname="+DB_NAME+" sslmode=disable")
+func InitPool(ctx context.Context) *pgxpool.Pool {
+	pool, err := pgxpool.New(ctx, fmt.Sprintf("user=%s password=%s host=%s port=% dbname=%s  sslmode=disable",
+		"DB_USER",
+		"DB_PASSWORD",
+		"DB_HOST",
+		"DB_PORT",
+		"DB_NAME"))
 	if err != nil {
-		logger.Error("Error connecting to database: ", err)
 		panic(err)
 	}
 
-	defer db.Close()
-
-	logger.Info("Connected to database")
-	return db
+	return pool
 }
