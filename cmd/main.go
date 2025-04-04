@@ -16,7 +16,7 @@ import (
 	"github.com/josevitorrodriguess/client-manager/internal/services"
 	_ "github.com/lib/pq"
 )
-
+    
 func main() {
 	logger.Info("Starting the application...")
 
