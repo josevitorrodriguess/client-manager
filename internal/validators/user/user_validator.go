@@ -10,6 +10,7 @@ type UserRequest struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	IsAdmin  bool   `json:"role"`
 }
 
 func (ur *UserRequest) IsValid() (bool, error) {
@@ -20,6 +21,25 @@ func (ur *UserRequest) IsValid() (bool, error) {
 		return false, fmt.Errorf("invalid email")
 	}
 	if utils.MinChars(ur.Password, 8) && utils.MaxChars(ur.Password, 100) {
+		return false, fmt.Errorf("password must have between 8 and 100 characters")
+	}
+	if !bool(ur.IsAdmin) {
+		return false, fmt.Errorf("is_admin must be a boolean")
+	}
+
+	return true, nil
+}
+
+type UserRequestLogin struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+func (url *UserRequestLogin) IsValid() (bool, error) {
+	if utils.Matches(url.Email, utils.EmailRegex) {
+		return false, fmt.Errorf("invalid email")
+	}
+	if utils.MinChars(url.Password, 8) && utils.MaxChars(url.Password, 100) {
 		return false, fmt.Errorf("password must have between 8 and 100 characters")
 	}
 	return true, nil

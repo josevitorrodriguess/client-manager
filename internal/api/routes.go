@@ -8,7 +8,9 @@ func (api *Api) BindRoutes() {
 	api.Router.Route("/api", func(r chi.Router) {
 		r.Route("/v1", func(r chi.Router) {
 			r.Route("/users", func(r chi.Router) {
-				r.Post("/signup", api.SignUpUserHandler)
+				r.With(api.AdminMiddleware).Post("/register", api.SignUpUserHandler)
+				r.Post("/login", api.LoginUserHandler)
+				r.With(api.AuthMiddleware).Post("/logout",api.LogoutUserHandler)
 			})
 		})
 	})
