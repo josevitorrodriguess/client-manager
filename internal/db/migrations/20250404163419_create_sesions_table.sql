@@ -1,5 +1,5 @@
--- Write your migrate up statements here
-
+-- +goose Up
+-- +goose StatementBegin
 CREATE TABLE sessions (
 	token TEXT PRIMARY KEY,
 	data BYTEA NOT NULL,
@@ -7,11 +7,10 @@ CREATE TABLE sessions (
 );
 
 CREATE INDEX sessions_expiry_idx ON sessions (expiry);
+-- +goose StatementEnd
 
----- create above / drop below ----
-
+-- +goose Down
+-- +goose StatementBegin
 DROP INDEX IF EXISTS sessions_expiry_idx;
 DROP TABLE IF EXISTS sessions;
-
--- Write your migrate down statements here. If this migration is irreversible
--- Then delete the separator line above.
+-- +goose StatementEnd

@@ -3,25 +3,19 @@ package db
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const (
-	DB_USER     = "DB_USER"
-	DB_PASSWORD = "DB_PASSWORD"
-	DB_HOST     = "DB_HOST"
-	DB_PORT     = "DB_PORT"
-	DB_NAME     = "DB_NAME"
-)
-
 func InitPool(ctx context.Context) *pgxpool.Pool {
-	pool, err := pgxpool.New(ctx, fmt.Sprintf("user=%s password=%s host=%s port=% dbname=%s  sslmode=disable",
-		"DB_USER",
-		"DB_PASSWORD",
-		"DB_HOST",
-		"DB_PORT",
-		"DB_NAME"))
+
+	pool, err := pgxpool.New(ctx, fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s  sslmode=disable",
+		os.Getenv("DATABASE_USER"),
+		os.Getenv("DATABASE_PASSWORD"),
+		os.Getenv("DATABASE_HOST"),
+		os.Getenv("DATABASE_PORT"),
+		os.Getenv("DATABASE_NAME")))
 	if err != nil {
 		panic(err)
 	}

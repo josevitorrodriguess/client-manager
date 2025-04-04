@@ -16,7 +16,7 @@ import (
 	"github.com/josevitorrodriguess/client-manager/internal/services"
 	_ "github.com/lib/pq"
 )
-    
+
 func main() {
 	logger.Info("Starting the application...")
 
@@ -24,6 +24,11 @@ func main() {
 
 	ctx := context.Background()
 	pool := db.InitPool(ctx)
+
+	err := db.CreateAdmin(ctx, pool)
+	if err != nil {
+		logger.Error("Error creating admin", fmt.Errorf("error creating admin: %w", err))
+	}
 
 	defer pool.Close()
 

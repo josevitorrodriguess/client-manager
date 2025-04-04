@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -14,6 +15,9 @@ func CreateAdmin(ctx context.Context, pool *pgxpool.Pool) error {
 	adminEmail := os.Getenv("ADMIN_EMAIL")
 	adminPassword := os.Getenv("ADMIN_PASSWORD")
 
+	queries := sqlc.New(pool)
+
+	fmt.Println(adminName, adminEmail, adminPassword)
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -26,7 +30,7 @@ func CreateAdmin(ctx context.Context, pool *pgxpool.Pool) error {
 		IsAdmin:  true,
 	}
 
-	_, err = sqlc.New(pool).CreateUser(ctx, admin)
+	_, err = queries.CreateUser(ctx, admin)
 	if err != nil {
 		return err
 	}
