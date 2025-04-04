@@ -43,6 +43,7 @@ func (us *UserService) Create(ctx context.Context, user user.UserRequest) (uuid.
 		Name:     user.Name,
 		Email:    user.Email,
 		Password: hashPass,
+		IsAdmin: user.IsAdmin,
 	}
 
 	id, err := us.queries.CreateUser(ctx, args)
@@ -73,4 +74,12 @@ func (us *UserService) AuthenticateUser(ctx context.Context, email, password str
 		return uuid.UUID{}, err
 	}
 	return user.ID, nil
+}
+
+func (us *UserService) CheckIsAdmin(ctx context.Context, id uuid.UUID) (bool, error) {
+	ok, err := us.queries.CheckIfUserIsAdmin(ctx, id)
+	if err != nil {
+		return false, err
+	}
+	return ok, nil
 }
