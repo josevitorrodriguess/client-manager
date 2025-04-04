@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/gob"
 	"fmt"
 	"net/http"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/alexedwards/scs/pgxstore"
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/josevitorrodriguess/client-manager/internal/api"
 	"github.com/josevitorrodriguess/client-manager/internal/config/db"
@@ -18,6 +20,7 @@ import (
 )
 
 func main() {
+	gob.Register(uuid.UUID{})
 	logger.Info("Starting the application...")
 
 	godotenv.Load()
