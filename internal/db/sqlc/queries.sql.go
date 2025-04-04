@@ -12,9 +12,23 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const checkIfUserIsAdmin = `-- name: CheckIfUserIsAdmin :one
+SELECT 
+  is_admin
+FROM users
+WHERE id = $1
+`
+
+func (q *Queries) CheckIfUserIsAdmin(ctx context.Context, id uuid.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, checkIfUserIsAdmin, id)
+	var is_admin bool
+	err := row.Scan(&is_admin)
+	return is_admin, err
+}
+
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (name, email, password) 
-VALUES ($1, $2, $3)
+INSERT INTO users (name, email, password, is_admin) 
+VALUES ($1, $2, $3, $4)
 RETURNING id
 `
 
@@ -22,10 +36,16 @@ type CreateUserParams struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	IsAdmin  bool   `json:"is_admin"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, createUser, arg.Name, arg.Email, arg.Password)
+	row := q.db.QueryRow(ctx, createUser,
+		arg.Name,
+		arg.Email,
+		arg.Password,
+		arg.IsAdmin,
+	)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
@@ -78,16 +98,16 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
-SET name = $1, email = $2, password = $3
+SET name = $1, email = $2, password = $3, is_admin = $4
 WHERE id = $4
 RETURNING id, name, email
 `
 
 type UpdateUserParams struct {
-	Name     string    `json:"name"`
-	Email    string    `json:"email"`
-	Password string    `json:"password"`
-	ID       uuid.UUID `json:"id"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	IsAdmin  bool   `json:"is_admin"`
 }
 
 type UpdateUserRow struct {
@@ -101,7 +121,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateU
 		arg.Name,
 		arg.Email,
 		arg.Password,
-		arg.ID,
+		arg.IsAdmin,
 	)
 	var i UpdateUserRow
 	err := row.Scan(&i.ID, &i.Name, &i.Email)
