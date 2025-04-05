@@ -5,9 +5,93 @@
 package sqlc
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type CustomerType string
+
+const (
+	CustomerTypePF CustomerType = "PF"
+	CustomerTypePJ CustomerType = "PJ"
+)
+
+func (e *CustomerType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = CustomerType(s)
+	case string:
+		*e = CustomerType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for CustomerType: %T", src)
+	}
+	return nil
+}
+
+type NullCustomerType struct {
+	CustomerType CustomerType `json:"customer_type"`
+	Valid        bool         `json:"valid"` // Valid is true if CustomerType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullCustomerType) Scan(value interface{}) error {
+	if value == nil {
+		ns.CustomerType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.CustomerType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullCustomerType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.CustomerType), nil
+}
+
+type Address struct {
+	ID          int32       `json:"id"`
+	CustomerID  uuid.UUID   `json:"customer_id"`
+	AddressType string      `json:"address_type"`
+	Street      string      `json:"street"`
+	Number      string      `json:"number"`
+	Complement  pgtype.Text `json:"complement"`
+	State       string      `json:"state"`
+	City        string      `json:"city"`
+	Cep         string      `json:"cep"`
+}
+
+type Customer struct {
+	ID        uuid.UUID          `json:"id"`
+	Type      CustomerType       `json:"type"`
+	Email     string             `json:"email"`
+	Phone     string             `json:"phone"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	IsActive  bool               `json:"is_active"`
+}
+
+type CustomerfPf struct {
+	CustomerID uuid.UUID          `json:"customer_id"`
+	Cpf        string             `json:"cpf"`
+	Name       string             `json:"name"`
+	BirthDate  pgtype.Date        `json:"birth_date"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+}
+
+type CustomerfPj struct {
+	CustomerID  uuid.UUID          `json:"customer_id"`
+	Cnpj        string             `json:"cnpj"`
+	CompanyName string             `json:"company_name"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
 
 type Session struct {
 	Token  string             `json:"token"`
