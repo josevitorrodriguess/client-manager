@@ -28,3 +28,26 @@ func (api *Api) HandlerCreatePFCustomer(w http.ResponseWriter, r *http.Request) 
 
 	_ = jsonutils.EncodeJson(w, r, http.StatusCreated, map[string]any{"customer_id": id})
 }
+
+func (api *Api) HandlerCreatePJCustomer(w http.ResponseWriter, r *http.Request) {
+	data, err := jsonutils.DecodeJson[customer.CustomerPJRequest](r)
+	if err != nil {
+		_ = jsonutils.EncodeJson(w, r, http.StatusUnprocessableEntity, err.Error())
+		return
+	}
+
+	ok, err := data.IsValid()
+	if !ok {
+		_ = jsonutils.EncodeJson(w, r, http.StatusBadRequest, err)
+		return
+	}
+
+	id, err := api.CustomerService.CreatePJCustomer(r.Context(), data)
+	if err != nil {
+		errors.Is(err, services.ErrDuplicatedData)
+		_ = jsonutils.EncodeJson(w, r, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	_ = jsonutils.EncodeJson(w, r, http.StatusCreated, map[string]any{"customer_id": id})
+}

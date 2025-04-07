@@ -15,7 +15,8 @@ func (api *Api) BindRoutes() {
 				r.With(api.AuthMiddleware).Post("/logout", api.LogoutUserHandler)
 			})
 			r.Route("/customers", func(r chi.Router) {
-				r.With(api.AdminMiddleware).Post("/CreatePFCustomer", api.HandlerCreatePFCustomer)
+				r.With(api.AuthMiddleware, api.AdminMiddleware).Post("/createPFcustomer", api.HandlerCreatePFCustomer)
+				r.With(api.AuthMiddleware, api.AdminMiddleware).Post("/createPJcustomer", api.HandlerCreatePJCustomer)
 			})
 		})
 	})

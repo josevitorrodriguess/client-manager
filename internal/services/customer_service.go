@@ -51,3 +51,29 @@ func (cs *CustomerService) CreatePFCustomer(ctx context.Context, customer custom
 	}
 	return id, nil
 }
+
+func (cs *CustomerService) CreatePJCustomer(ctx context.Context, customer customer.CustomerPJRequest) (uuid.UUID, error) {
+
+	args := sqlc.CreateCustomerPJParams{
+		Type:        sqlc.CustomerType(customer.Type),
+		Email:       customer.Email,
+		Phone:       customer.Phone,
+		Cnpj:        customer.Cnpj,
+		CompanyName: customer.CompanyName,
+		AddressType: customer.AddressType,
+		Street:      customer.Street,
+		Complement:  customer.Complement,
+		State:       customer.State,
+		City:        customer.City,
+		Cep:         customer.Cep,
+	}
+
+	id, err := cs.queries.CreateCustomerPJ(ctx, args)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return uuid.UUID{}, ErrDuplicatedData
+		}
+	}
+	return id, nil
+}
