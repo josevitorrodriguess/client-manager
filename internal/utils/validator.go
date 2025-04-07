@@ -7,6 +7,10 @@ import (
 )
 
 var EmailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}as~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+var CPFRegex = regexp.MustCompile(`^([0-9]{3}\.?[0-9]{3}\.?[0-9]{3}-?[0-9]{2})$`)
+var PhoneRegex = regexp.MustCompile(`^(0?[0-9]{2})?\s*?([0-9])\s*?([0-9]{4})\s*[-]?\s*([0-9]{4})$`)
+var BirthDateRegex = regexp.MustCompile(`^(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])$|^(0[1-9]|[12][0-9]|3[01])[- /.](0[1-9]|1[012])[- /.](19|20)\d\d$`)
+var CEPRegex = regexp.MustCompile(`^([0-9]{5})-?([0-9]{3})$`)
 
 func NotBlank(value string) bool {
 	return strings.TrimSpace(value) != ""
