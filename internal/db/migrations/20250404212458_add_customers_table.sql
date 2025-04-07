@@ -10,7 +10,7 @@ CREATE TABLE customers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     type customer_type NOT NULL,
     email TEXT NOT NULL UNIQUE,
-    phone TEXT NOT NULL,
+    phone TEXT NOT NULL UNIQUE,
         
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
