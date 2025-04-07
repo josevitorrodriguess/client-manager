@@ -88,3 +88,17 @@ func (api *Api) HandlerCreatePJCustomer(w http.ResponseWriter, r *http.Request) 
 		zap.String("request_id", requestID))
 	_ = jsonutils.EncodeJson(w, r, http.StatusCreated, map[string]any{"customer_id": id})
 }
+
+func (api *Api) HandlerAddAddressToCostumer(w http.ResponseWriter, r *http.Request) {
+	data, err := jsonutils.DecodeJson[customer.AddAddressRequest](r)
+	if err != nil {
+		jsonutils.EncodeJson(w, r, http.StatusUnprocessableEntity, err.Error())
+	}
+	id, err := api.CustomerService.AddAddressRequest(r.Context(), data)
+	if err != nil {
+		_ = jsonutils.EncodeJson(w, r, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	_ = jsonutils.EncodeJson(w, r, http.StatusCreated, map[string]any{"address_id": id})
+}

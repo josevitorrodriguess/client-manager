@@ -3,6 +3,7 @@ package customer
 import (
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/josevitorrodriguess/client-manager/internal/utils"
 )
@@ -64,7 +65,6 @@ type CustomerPJRequest struct {
 	Cep         string      `json:"cep"`
 }
 
-
 func (cPJr *CustomerPJRequest) IsValid() (bool, error) {
 	if !(utils.MinChars(cPJr.CompanyName, 5) && utils.MaxChars(cPJr.CompanyName, 100)) {
 		return false, fmt.Errorf("company name must have between 5 and 100 characters")
@@ -83,4 +83,15 @@ func (cPJr *CustomerPJRequest) IsValid() (bool, error) {
 	}
 
 	return true, nil
+}
+
+type AddAddressRequest struct {
+	CustomerID  uuid.UUID   `json:"customer_id"`
+	AddressType string      `json:"address_type"`
+	Street      string      `json:"street"`
+	Number      string      `json:"number"`
+	Complement  pgtype.Text `json:"complement"`
+	State       string      `json:"state"`
+	City        string      `json:"city"`
+	Cep         string      `json:"cep"`
 }

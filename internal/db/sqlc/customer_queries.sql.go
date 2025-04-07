@@ -52,7 +52,7 @@ func (q *Queries) AddAddressToCustomer(ctx context.Context, arg AddAddressToCust
 	var id int32
 	err := row.Scan(&id)
 	return id, err
-}
+} 
 
 const createCustomerPF = `-- name: CreateCustomerPF :one
 WITH new_customer AS (

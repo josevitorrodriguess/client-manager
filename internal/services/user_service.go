@@ -36,8 +36,6 @@ func NewUserService(pool *pgxpool.Pool) *UserService {
 }
 
 func (us *UserService) Create(ctx context.Context, user user.UserRequest) (uuid.UUID, error) {
-	logger.Debug("Creating new user", zap.String("email", user.Email))
-
 	hashPass, err := utils.EncryptPassword(user.Password)
 	if err != nil {
 		logger.Error("Failed to encrypt password", err, zap.String("email", user.Email))
@@ -64,14 +62,11 @@ func (us *UserService) Create(ctx context.Context, user user.UserRequest) (uuid.
 
 	logger.Info("User created successfully",
 		zap.String("user_id", id.String()),
-		zap.String("email", user.Email),
-		zap.Bool("is_admin", user.IsAdmin))
+		zap.String("email", user.Email))
 	return id, nil
 }
 
 func (us *UserService) AuthenticateUser(ctx context.Context, email, password string) (uuid.UUID, error) {
-	logger.Debug("Authenticating user", zap.String("email", email))
-
 	user, err := us.queries.GetUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -92,23 +87,15 @@ func (us *UserService) AuthenticateUser(ctx context.Context, email, password str
 		return uuid.UUID{}, err
 	}
 
-	logger.Info("User authenticated successfully",
-		zap.String("user_id", user.ID.String()),
-		zap.String("email", email))
 	return user.ID, nil
 }
 
 func (us *UserService) CheckIsAdmin(ctx context.Context, id uuid.UUID) (bool, error) {
-	logger.Debug("Checking admin status", zap.String("user_id", id.String()))
-
 	ok, err := us.queries.CheckIfUserIsAdmin(ctx, id)
 	if err != nil {
 		logger.Error("Failed to check admin status", err, zap.String("user_id", id.String()))
 		return false, err
 	}
 
-	logger.Debug("Admin status checked",
-		zap.String("user_id", id.String()),
-		zap.Bool("is_admin", ok))
 	return ok, nil
 }
