@@ -9,7 +9,7 @@ import (
 
 func (api *Api) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !api.Sessions.Exists(r.Context(), "AuthenticadetdUserId") {
+		if !api.Sessions.Exists(r.Context(), "AuthenticatedUserId") {
 			jsonutils.EncodeJson(w, r, http.StatusUnauthorized, map[string]any{
 				"message": "must be logged in",
 			})
@@ -21,13 +21,13 @@ func (api *Api) AuthMiddleware(next http.Handler) http.Handler {
 
 func (api *Api) AdminMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !api.Sessions.Exists(r.Context(), "AuthenticadetdUserId") {
+		if !api.Sessions.Exists(r.Context(), "AuthenticatedUserId") {
 			jsonutils.EncodeJson(w, r, http.StatusUnauthorized, map[string]any{
 				"message": "must be logged in",
 			})
 		}
 
-		userIDInterface := api.Sessions.Get(r.Context(), "AuthenticadetdUserId")
+		userIDInterface := api.Sessions.Get(r.Context(), "AuthenticatedUserId")
 		userID, ok := userIDInterface.(string)
 		if !ok {
 			jsonutils.EncodeJson(w, r, http.StatusInternalServerError, map[string]any{
@@ -58,7 +58,7 @@ func (api *Api) AdminMiddleware(next http.Handler) http.Handler {
 				"message": "only admins can access this resource",
 			})
 			return
-		} 
+		}
 
 		next.ServeHTTP(w, r)
 	})

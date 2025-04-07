@@ -28,10 +28,8 @@ func (api *Api) SignUpUserHandler(w http.ResponseWriter, r *http.Request) {
 	_ = jsonutils.EncodeJson(w, r, http.StatusCreated, map[string]any{"user_id": id})
 }
 
-
-
 func (api *Api) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
-	data,  err := jsonutils.DecodeJson[user.UserRequestLogin](r)
+	data, err := jsonutils.DecodeJson[user.UserRequestLogin](r)
 	if err != nil {
 		_ = jsonutils.EncodeJson(w, r, http.StatusUnprocessableEntity, map[string]any{"error": "invalid json"})
 		return
@@ -53,7 +51,7 @@ func (api *Api) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.Sessions.Put(r.Context(), "AuthenticadetdUserId", id)
+	api.Sessions.Put(r.Context(), "AuthenticatedUserId", id)
 	jsonutils.EncodeJson(w, r, http.StatusOK, map[string]any{"message": "logged in sucessfully"})
 
 }
@@ -65,6 +63,6 @@ func (api *Api) LogoutUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.Sessions.Remove(r.Context(), "AuthenticadetdUserId")
+	api.Sessions.Remove(r.Context(), "AuthenticatedUserId")
 	jsonutils.EncodeJson(w, r, http.StatusOK, map[string]any{"message": "logged out sucessfully"})
 }
