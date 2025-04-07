@@ -51,7 +51,7 @@ func (api *Api) LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.Sessions.Put(r.Context(), "AuthenticatedUserId", id)
+	api.Sessions.Put(r.Context(), "AuthenticatedUserId", id.String())
 	jsonutils.EncodeJson(w, r, http.StatusOK, map[string]any{"message": "logged in sucessfully"})
 
 }

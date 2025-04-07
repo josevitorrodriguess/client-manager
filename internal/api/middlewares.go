@@ -25,6 +25,7 @@ func (api *Api) AdminMiddleware(next http.Handler) http.Handler {
 			jsonutils.EncodeJson(w, r, http.StatusUnauthorized, map[string]any{
 				"message": "must be logged in",
 			})
+			return
 		}
 
 		userIDInterface := api.Sessions.Get(r.Context(), "AuthenticatedUserId")
