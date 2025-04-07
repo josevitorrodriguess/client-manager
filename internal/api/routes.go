@@ -1,8 +1,8 @@
 package api
 
 import (
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func (api *Api) BindRoutes() {
@@ -13,6 +13,9 @@ func (api *Api) BindRoutes() {
 				r.With(api.AdminMiddleware).Post("/register", api.SignUpUserHandler)
 				r.Post("/login", api.LoginUserHandler)
 				r.With(api.AuthMiddleware).Post("/logout", api.LogoutUserHandler)
+			})
+			r.Route("/customers", func(r chi.Router) {
+				r.With(api.AdminMiddleware).Post("/CreatePFCustomer", api.HandlerCreatePFCustomer)
 			})
 		})
 	})
