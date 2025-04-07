@@ -4,50 +4,87 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/josevitorrodriguess/client-manager/internal/config/logger"
 	"github.com/josevitorrodriguess/client-manager/internal/jsonutils"
 	"github.com/josevitorrodriguess/client-manager/internal/services"
 	"github.com/josevitorrodriguess/client-manager/internal/validators/customer"
+	"go.uber.org/zap"
 )
 
 func (api *Api) HandlerCreatePFCustomer(w http.ResponseWriter, r *http.Request) {
+	requestID := r.Header.Get("X-Request-ID")
+	logger.Info("Processing PF customer creation request", zap.String("request_id", requestID))
+
 	data, err := jsonutils.DecodeJson[customer.CustomerPFRequest](r)
 	if err != nil {
-		_ = jsonutils.EncodeJson(w, r, http.StatusUnprocessableEntity, err.Error())
-	}
-
-	ok, err := data.IsValid()
-	if !ok {
-		_ = jsonutils.EncodeJson(w, r, http.StatusBadRequest, err)
-	}
-
-	id, err := api.CustomerService.CreatePFCustomer(r.Context(), data)
-	if err != nil {
-		errors.Is(err, services.ErrDuplicatedData)
-		_ = jsonutils.EncodeJson(w, r, http.StatusUnprocessableEntity, err)
-	}
-
-	_ = jsonutils.EncodeJson(w, r, http.StatusCreated, map[string]any{"customer_id": id})
-}
-
-func (api *Api) HandlerCreatePJCustomer(w http.ResponseWriter, r *http.Request) {
-	data, err := jsonutils.DecodeJson[customer.CustomerPJRequest](r)
-	if err != nil {
+		logger.Error("Failed to decode PF customer request", err, zap.String("request_id", requestID))
 		_ = jsonutils.EncodeJson(w, r, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
 
 	ok, err := data.IsValid()
 	if !ok {
+		logger.Warn("Invalid PF customer data", zap.String("error", err.Error()), zap.String("request_id", requestID))
+		_ = jsonutils.EncodeJson(w, r, http.StatusBadRequest, err)
+		return
+	}
+
+	id, err := api.CustomerService.CreatePFCustomer(r.Context(), data)
+	if err != nil {
+		if errors.Is(err, services.ErrDuplicatedData) {
+			logger.Warn("Duplicate PF customer data",
+				zap.String("email", data.Email),
+				zap.String("cpf", data.Cpf),
+				zap.String("request_id", requestID))
+		} else {
+			logger.Error("Failed to create PF customer", err, zap.String("request_id", requestID))
+		}
+		_ = jsonutils.EncodeJson(w, r, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	logger.Info("PF customer created successfully",
+		zap.String("customer_id", id.String()),
+		zap.String("name", data.Name),
+		zap.String("request_id", requestID))
+	_ = jsonutils.EncodeJson(w, r, http.StatusCreated, map[string]any{"customer_id": id})
+}
+
+func (api *Api) HandlerCreatePJCustomer(w http.ResponseWriter, r *http.Request) {
+	requestID := r.Header.Get("X-Request-ID")
+	logger.Info("Processing PJ customer creation request", zap.String("request_id", requestID))
+
+	data, err := jsonutils.DecodeJson[customer.CustomerPJRequest](r)
+	if err != nil {
+		logger.Error("Failed to decode PJ customer request", err, zap.String("request_id", requestID))
+		_ = jsonutils.EncodeJson(w, r, http.StatusUnprocessableEntity, err.Error())
+		return
+	}
+
+	ok, err := data.IsValid()
+	if !ok {
+		logger.Warn("Invalid PJ customer data", zap.String("error", err.Error()), zap.String("request_id", requestID))
 		_ = jsonutils.EncodeJson(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	id, err := api.CustomerService.CreatePJCustomer(r.Context(), data)
 	if err != nil {
-		errors.Is(err, services.ErrDuplicatedData)
+		if errors.Is(err, services.ErrDuplicatedData) {
+			logger.Warn("Duplicate PJ customer data",
+				zap.String("email", data.Email),
+				zap.String("cnpj", data.Cnpj),
+				zap.String("request_id", requestID))
+		} else {
+			logger.Error("Failed to create PJ customer", err, zap.String("request_id", requestID))
+		}
 		_ = jsonutils.EncodeJson(w, r, http.StatusUnprocessableEntity, err)
 		return
 	}
 
+	logger.Info("PJ customer created successfully",
+		zap.String("customer_id", id.String()),
+		zap.String("company_name", data.CompanyName),
+		zap.String("request_id", requestID))
 	_ = jsonutils.EncodeJson(w, r, http.StatusCreated, map[string]any{"customer_id": id})
 }

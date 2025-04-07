@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/gob"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -17,6 +16,7 @@ import (
 	"github.com/josevitorrodriguess/client-manager/internal/config/logger"
 	"github.com/josevitorrodriguess/client-manager/internal/services"
 	_ "github.com/lib/pq"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -24,22 +24,29 @@ func main() {
 	logger.Info("Starting the application...")
 
 	godotenv.Load()
+	logger.Debug("Environment variables loaded")
 
 	ctx := context.Background()
+	logger.Info("Initializing database connection...")
 	pool := db.InitPool(ctx)
+	logger.Info("Database connection established successfully")
 
 	err := db.CreateAdmin(ctx, pool)
 	if err != nil {
-		logger.Error("Error creating admin", fmt.Errorf("error creating admin: %w", err))
+		logger.Error("Error creating admin", err)
+	} else {
+		logger.Info("Admin user created successfully")
 	}
 
 	defer pool.Close()
 
+	logger.Info("Initializing session manager...")
 	s := scs.New()
 	s.Store = pgxstore.New(pool)
 	s.Lifetime = 24 * time.Hour
 	s.Cookie.HttpOnly = true
 	s.Cookie.SameSite = http.SameSiteLaxMode
+	logger.Info("Session manager initialized successfully")
 
 	api := api.Api{
 		Router:          chi.NewMux(),
@@ -48,10 +55,14 @@ func main() {
 		Sessions:        s,
 	}
 
+	logger.Info("Binding routes...")
 	api.BindRoutes()
+	logger.Info("Routes bound successfully")
 
-	fmt.Println("Server is running on port 3080")
-	if err := http.ListenAndServe("localhost:3080", api.Router); err != nil {
+	port := "3080"
+	logger.Info("Server is starting", zap.String("port", port))
+	if err := http.ListenAndServe("localhost:"+port, api.Router); err != nil {
+		logger.Error("Server failed to start", err)
 		panic(err)
 	}
 }

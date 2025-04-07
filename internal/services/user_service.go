@@ -11,9 +11,11 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/josevitorrodriguess/client-manager/internal/config/logger"
 	"github.com/josevitorrodriguess/client-manager/internal/db/sqlc"
 	"github.com/josevitorrodriguess/client-manager/internal/utils"
 	"github.com/josevitorrodriguess/client-manager/internal/validators/user"
+	"go.uber.org/zap"
 )
 
 var (
@@ -34,8 +36,11 @@ func NewUserService(pool *pgxpool.Pool) *UserService {
 }
 
 func (us *UserService) Create(ctx context.Context, user user.UserRequest) (uuid.UUID, error) {
+	logger.Debug("Creating new user", zap.String("email", user.Email))
+
 	hashPass, err := utils.EncryptPassword(user.Password)
 	if err != nil {
+		logger.Error("Failed to encrypt password", err, zap.String("email", user.Email))
 		return uuid.Nil, fmt.Errorf("error encrypting password: %w", err)
 	}
 
@@ -43,43 +48,67 @@ func (us *UserService) Create(ctx context.Context, user user.UserRequest) (uuid.
 		Name:     user.Name,
 		Email:    user.Email,
 		Password: hashPass,
-		IsAdmin: user.IsAdmin,
+		IsAdmin:  user.IsAdmin,
 	}
 
 	id, err := us.queries.CreateUser(ctx, args)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			logger.Warn("Duplicate user creation attempt", zap.String("email", user.Email))
 			return uuid.UUID{}, ErrDuplicatedEmailOrUsername
 		}
+		logger.Error("Failed to create user in database", err, zap.String("email", user.Email))
 		return uuid.UUID{}, err
 	}
+
+	logger.Info("User created successfully",
+		zap.String("user_id", id.String()),
+		zap.String("email", user.Email),
+		zap.Bool("is_admin", user.IsAdmin))
 	return id, nil
 }
 
 func (us *UserService) AuthenticateUser(ctx context.Context, email, password string) (uuid.UUID, error) {
+	logger.Debug("Authenticating user", zap.String("email", email))
+
 	user, err := us.queries.GetUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
+			logger.Warn("Login attempt with non-existent email", zap.String("email", email))
 			return uuid.UUID{}, ErrInvalidCredentials
 		}
+		logger.Error("Failed to get user from database", err, zap.String("email", email))
 		return uuid.UUID{}, err
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			logger.Warn("Invalid password attempt", zap.String("email", email))
 			return uuid.UUID{}, ErrInvalidCredentials
 		}
+		logger.Error("Failed to compare passwords", err, zap.String("email", email))
 		return uuid.UUID{}, err
 	}
+
+	logger.Info("User authenticated successfully",
+		zap.String("user_id", user.ID.String()),
+		zap.String("email", email))
 	return user.ID, nil
 }
 
 func (us *UserService) CheckIsAdmin(ctx context.Context, id uuid.UUID) (bool, error) {
+	logger.Debug("Checking admin status", zap.String("user_id", id.String()))
+
 	ok, err := us.queries.CheckIfUserIsAdmin(ctx, id)
 	if err != nil {
+		logger.Error("Failed to check admin status", err, zap.String("user_id", id.String()))
 		return false, err
 	}
+
+	logger.Debug("Admin status checked",
+		zap.String("user_id", id.String()),
+		zap.Bool("is_admin", ok))
 	return ok, nil
 }
