@@ -109,11 +109,25 @@ func (api *Api) HandlerGetCustomerById(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		_ = jsonutils.EncodeJson(w, r, http.StatusUnprocessableEntity, map[string]any{"error": err})
 	}
-	data, err := api.CustomerService.GetCustomerDetails(r.Context(), ID)
+	customer, err := api.CustomerService.GetCustomerDetails(r.Context(), ID)
 	if err != nil {
-		_ = jsonutils.EncodeJson(w, r, http.StatusNotFound, err)
+		_ = jsonutils.EncodeJson(w, r, http.StatusNotFound, map[string]any{"error": err})
 		return
 	}
+	if customer.ID == uuid.Nil {
+		_ = jsonutils.EncodeJson(w, r, http.StatusNotFound, map[string]any{"message": "no customer found"})
+	}
+	_ = jsonutils.EncodeJson(w, r, http.StatusOK, customer)
+}
 
-	_ = jsonutils.EncodeJson(w, r, http.StatusOK, data)
+func (api *Api) HandleGetAllCustomers(w http.ResponseWriter, r *http.Request) {
+	customers, err := api.CustomerService.GetAllCustomersDetails(r.Context())
+	if err != nil {
+		_ = jsonutils.EncodeJson(w, r, http.StatusNotFound, map[string]any{"error": err})
+	}
+	if len(customers) == 0 {
+		_ = jsonutils.EncodeJson(w, r, http.StatusOK, map[string]any{"message": "no customers found"})
+	}
+
+	_ = jsonutils.EncodeJson(w, r, http.StatusOK, customers)
 }
