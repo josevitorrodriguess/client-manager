@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/josevitorrodriguess/client-manager/internal/config/logger"
 	"github.com/josevitorrodriguess/client-manager/internal/jsonutils"
 	"github.com/josevitorrodriguess/client-manager/internal/services"
@@ -104,13 +105,11 @@ func (api *Api) HandlerAddAddressToCostumer(w http.ResponseWriter, r *http.Reque
 }
 
 func (api *Api) HandlerGetCustomerById(w http.ResponseWriter, r *http.Request) {
-	userID, err := GetAuthenticatedUserID(r.Context(), api.Sessions)
+	ID, err := jsonutils.DecodeJson[uuid.UUID](r)
 	if err != nil {
-		// trata: sessão inválida, não autenticado etc.
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
-		return
+		_ = jsonutils.EncodeJson(w, r, http.StatusUnprocessableEntity, map[string]any{"error": err})
 	}
-	data, err := api.CustomerService.GetCustomerDetails(r.Context(), userID)
+	data, err := api.CustomerService.GetCustomerDetails(r.Context(), ID)
 	if err != nil {
 		_ = jsonutils.EncodeJson(w, r, http.StatusNotFound, err)
 		return
