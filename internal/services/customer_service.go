@@ -126,21 +126,17 @@ func (cs *CustomerService) GetCustomerDetails(ctx context.Context, id uuid.UUID)
 		return customer.CustomerResponse{}, err
 	}
 
-	addresses := customer.MapAddresses(adrs)
-
-	customerResponse := customer.CustomerResponse{
-		ID:          data.ID,
-		Type:        data.Type,
-		Email:       data.Email,
-		Phone:       data.Phone,
-		IsActive:    data.IsActive,
-		Cpf:         data.Cpf,
-		PfName:      data.PfName,
-		BirthDate:   data.BirthDate,
-		Cnpj:        data.Cnpj,
-		CompanyName: data.CompanyName,
-		Addresses:   addresses,
-	}
+	customerResponse := customer.MapCustomer(data, adrs)
 
 	return customerResponse, nil
+}
+
+func (cs *CustomerService) GetAllCustomersDetails(ctx context.Context) ([]sqlc.GetAllCustomersRow, error) {
+
+	datas, err := cs.queries.GetAllCustomers(ctx)
+	if err != nil {
+		return []sqlc.GetAllCustomersRow{}, err
+	}
+
+	return datas, nil
 }
