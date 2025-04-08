@@ -17,15 +17,11 @@ type Querier interface {
 	CreateCustomerPJ(ctx context.Context, arg CreateCustomerPJParams) (uuid.UUID, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (uuid.UUID, error)
 	DeleteAddress(ctx context.Context, id int32) error
-	DeleteCustomer(ctx context.Context, id uuid.UUID) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
-	GetAllCustomers(ctx context.Context) ([]Customer, error)
+	GetAllCustomers(ctx context.Context) ([]GetAllCustomersRow, error)
 	GetCustomerAddresses(ctx context.Context, customerID uuid.UUID) ([]GetCustomerAddressesRow, error)
 	GetCustomerByID(ctx context.Context, id uuid.UUID) (GetCustomerByIDRow, error)
-	GetCustomerDetails(ctx context.Context, id uuid.UUID) ([]GetCustomerDetailsRow, error)
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
-	SearchPFCustomersByName(ctx context.Context, arg SearchPFCustomersByNameParams) ([]Customer, error)
-	SearchPJCustomersByCompanyName(ctx context.Context, arg SearchPJCustomersByCompanyNameParams) ([]Customer, error)
 	UpdateAddress(ctx context.Context, arg UpdateAddressParams) (int32, error)
 	UpdateCustomerBasicInfo(ctx context.Context, arg UpdateCustomerBasicInfoParams) (uuid.UUID, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error)

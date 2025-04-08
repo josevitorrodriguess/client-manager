@@ -194,37 +194,85 @@ func (q *Queries) DeleteAddress(ctx context.Context, id int32) error {
 	return err
 }
 
-const deleteCustomer = `-- name: DeleteCustomer :exec
-DELETE FROM customers
-WHERE id = $1
+const getAllCustomers = `-- name: GetAllCustomers :many
+SELECT
+    c.id,
+    c.email,
+    c.phone,
+    c.created_at,
+    c.updated_at,
+    c.is_active,
+    pf.cpf,
+    pf.name,
+    pf.birth_date,
+    pj.cnpj,
+    pj.company_name,
+    a.id AS address_id,
+    a.address_type,
+    a.street,
+    a.number,
+    a.complement,
+    a.state,
+    a.city,
+    a.cep
+FROM customers c
+LEFT JOIN customerf_pf pf ON c.id = pf.customer_id
+LEFT JOIN customerf_pj pj ON c.id = pj.customer_id
+LEFT JOIN addresses a ON c.id = a.customer_id
+ORDER BY c.id, a.id
 `
 
-func (q *Queries) DeleteCustomer(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteCustomer, id)
-	return err
+type GetAllCustomersRow struct {
+	ID          uuid.UUID          `json:"id"`
+	Email       string             `json:"email"`
+	Phone       string             `json:"phone"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	IsActive    bool               `json:"is_active"`
+	Cpf         pgtype.Text        `json:"cpf"`
+	Name        pgtype.Text        `json:"name"`
+	BirthDate   pgtype.Date        `json:"birth_date"`
+	Cnpj        pgtype.Text        `json:"cnpj"`
+	CompanyName pgtype.Text        `json:"company_name"`
+	AddressID   pgtype.Int4        `json:"address_id"`
+	AddressType pgtype.Text        `json:"address_type"`
+	Street      pgtype.Text        `json:"street"`
+	Number      pgtype.Text        `json:"number"`
+	Complement  pgtype.Text        `json:"complement"`
+	State       pgtype.Text        `json:"state"`
+	City        pgtype.Text        `json:"city"`
+	Cep         pgtype.Text        `json:"cep"`
 }
 
-const getAllCustomers = `-- name: GetAllCustomers :many
-SELECT id, type, email, phone, created_at, updated_at, is_active FROM customers
-`
-
-func (q *Queries) GetAllCustomers(ctx context.Context) ([]Customer, error) {
+func (q *Queries) GetAllCustomers(ctx context.Context) ([]GetAllCustomersRow, error) {
 	rows, err := q.db.Query(ctx, getAllCustomers)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Customer
+	var items []GetAllCustomersRow
 	for rows.Next() {
-		var i Customer
+		var i GetAllCustomersRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.Type,
 			&i.Email,
 			&i.Phone,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.IsActive,
+			&i.Cpf,
+			&i.Name,
+			&i.BirthDate,
+			&i.Cnpj,
+			&i.CompanyName,
+			&i.AddressID,
+			&i.AddressType,
+			&i.Street,
+			&i.Number,
+			&i.Complement,
+			&i.State,
+			&i.City,
+			&i.Cep,
 		); err != nil {
 			return nil, err
 		}
@@ -358,177 +406,6 @@ func (q *Queries) GetCustomerByID(ctx context.Context, id uuid.UUID) (GetCustome
 		&i.CompanyName,
 	)
 	return i, err
-}
-
-const getCustomerDetails = `-- name: GetCustomerDetails :many
-SELECT
-    c.id,
-    c.email,
-    c.phone,
-    c.created_at,
-    c.updated_at,
-    c.is_active,
-    pf.cpf,
-    pf.name,
-    pf.birth_date,
-    pj.cnpj,
-    pj.company_name,
-    a.id AS address_id,
-    a.address_type,
-    a.street,
-    a.number,
-    a.complement,
-    a.state,
-    a.city,
-    a.cep
-FROM customers c
-LEFT JOIN customerf_pf pf ON c.id = pf.customer_id
-LEFT JOIN customerf_pj pj ON c.id = pj.customer_id
-LEFT JOIN addresses a ON c.id = a.customer_id
-WHERE c.id = $1
-ORDER BY a.id
-`
-
-type GetCustomerDetailsRow struct {
-	ID          uuid.UUID          `json:"id"`
-	Email       string             `json:"email"`
-	Phone       string             `json:"phone"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
-	IsActive    bool               `json:"is_active"`
-	Cpf         pgtype.Text        `json:"cpf"`
-	Name        pgtype.Text        `json:"name"`
-	BirthDate   pgtype.Date        `json:"birth_date"`
-	Cnpj        pgtype.Text        `json:"cnpj"`
-	CompanyName pgtype.Text        `json:"company_name"`
-	AddressID   pgtype.Int4        `json:"address_id"`
-	AddressType pgtype.Text        `json:"address_type"`
-	Street      pgtype.Text        `json:"street"`
-	Number      pgtype.Text        `json:"number"`
-	Complement  pgtype.Text        `json:"complement"`
-	State       pgtype.Text        `json:"state"`
-	City        pgtype.Text        `json:"city"`
-	Cep         pgtype.Text        `json:"cep"`
-}
-
-func (q *Queries) GetCustomerDetails(ctx context.Context, id uuid.UUID) ([]GetCustomerDetailsRow, error) {
-	rows, err := q.db.Query(ctx, getCustomerDetails, id)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetCustomerDetailsRow
-	for rows.Next() {
-		var i GetCustomerDetailsRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Email,
-			&i.Phone,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.IsActive,
-			&i.Cpf,
-			&i.Name,
-			&i.BirthDate,
-			&i.Cnpj,
-			&i.CompanyName,
-			&i.AddressID,
-			&i.AddressType,
-			&i.Street,
-			&i.Number,
-			&i.Complement,
-			&i.State,
-			&i.City,
-			&i.Cep,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const searchPFCustomersByName = `-- name: SearchPFCustomersByName :many
-SELECT c.id, c.type, c.email, c.phone, c.created_at, c.updated_at, c.is_active FROM customers c
-JOIN customerf_pf pf ON c.id = pf.customer_id
-WHERE pf.name ILIKE $1
-LIMIT $2
-`
-
-type SearchPFCustomersByNameParams struct {
-	Name  string `json:"name"`
-	Limit int32  `json:"limit"`
-}
-
-func (q *Queries) SearchPFCustomersByName(ctx context.Context, arg SearchPFCustomersByNameParams) ([]Customer, error) {
-	rows, err := q.db.Query(ctx, searchPFCustomersByName, arg.Name, arg.Limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Customer
-	for rows.Next() {
-		var i Customer
-		if err := rows.Scan(
-			&i.ID,
-			&i.Type,
-			&i.Email,
-			&i.Phone,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.IsActive,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const searchPJCustomersByCompanyName = `-- name: SearchPJCustomersByCompanyName :many
-SELECT c.id, c.type, c.email, c.phone, c.created_at, c.updated_at, c.is_active FROM customers c
-JOIN customerf_pj pj ON c.id = pj.customer_id
-WHERE pj.company_name ILIKE $1
-LIMIT $2
-`
-
-type SearchPJCustomersByCompanyNameParams struct {
-	CompanyName string `json:"company_name"`
-	Limit       int32  `json:"limit"`
-}
-
-func (q *Queries) SearchPJCustomersByCompanyName(ctx context.Context, arg SearchPJCustomersByCompanyNameParams) ([]Customer, error) {
-	rows, err := q.db.Query(ctx, searchPJCustomersByCompanyName, arg.CompanyName, arg.Limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Customer
-	for rows.Next() {
-		var i Customer
-		if err := rows.Scan(
-			&i.ID,
-			&i.Type,
-			&i.Email,
-			&i.Phone,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.IsActive,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const updateAddress = `-- name: UpdateAddress :one

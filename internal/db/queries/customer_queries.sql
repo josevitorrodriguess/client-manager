@@ -55,6 +55,20 @@ SELECT
 FROM customer_pj
 RETURNING customer_id;
 
+-- name: AddAddressToCustomer :one
+INSERT INTO addresses (
+    customer_id,
+    address_type,
+    street,
+    number,
+    complement,
+    state,
+    city,
+    cep
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+RETURNING id;
+
 
 -- name: GetCustomerByID :one
 SELECT 
@@ -91,29 +105,33 @@ LEFT JOIN customerf_pj pj ON c.id = pj.customer_id AND c.type = 'PJ'
 WHERE c.id = $1;
 
 
--- name: AddAddressToCustomer :one
-INSERT INTO addresses (
-    customer_id,
-    address_type,
-    street,
-    number,
-    complement,
-    state,
-    city,
-    cep
-)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-RETURNING id;
-
-
-
--- name: DeleteCustomer :exec
-DELETE FROM customers
-WHERE id = $1;
-
 
 -- name: GetAllCustomers :many
-SELECT * FROM customers;
+SELECT
+    c.id,
+    c.email,
+    c.phone,
+    c.created_at,
+    c.updated_at,
+    c.is_active,
+    pf.cpf,
+    pf.name,
+    pf.birth_date,
+    pj.cnpj,
+    pj.company_name,
+    a.id AS address_id,
+    a.address_type,
+    a.street,
+    a.number,
+    a.complement,
+    a.state,
+    a.city,
+    a.cep
+FROM customers c
+LEFT JOIN customerf_pf pf ON c.id = pf.customer_id
+LEFT JOIN customerf_pj pj ON c.id = pj.customer_id
+LEFT JOIN addresses a ON c.id = a.customer_id
+ORDER BY c.id, a.id;
 
 
 -- name: GetCustomerAddresses :many
@@ -151,52 +169,11 @@ WHERE id = $1
 RETURNING id;
 
 
--- name: GetCustomerDetails :many
-SELECT
-    c.id,
-    c.email,
-    c.phone,
-    c.created_at,
-    c.updated_at,
-    c.is_active,
-    pf.cpf,
-    pf.name,
-    pf.birth_date,
-    pj.cnpj,
-    pj.company_name,
-    a.id AS address_id,
-    a.address_type,
-    a.street,
-    a.number,
-    a.complement,
-    a.state,
-    a.city,
-    a.cep
-FROM customers c
-LEFT JOIN customerf_pf pf ON c.id = pf.customer_id
-LEFT JOIN customerf_pj pj ON c.id = pj.customer_id
-LEFT JOIN addresses a ON c.id = a.customer_id
-WHERE c.id = $1
-ORDER BY a.id;
-
-
--- name: SearchPJCustomersByCompanyName :many
-SELECT c.* FROM customers c
-JOIN customerf_pj pj ON c.id = pj.customer_id
-WHERE pj.company_name ILIKE $1
-LIMIT $2;
-
-
 -- name: DeleteAddress :exec
 DELETE FROM addresses
 WHERE id = $1;
 
 
--- name: SearchPFCustomersByName :many
-SELECT c.* FROM customers c
-JOIN customerf_pf pf ON c.id = pf.customer_id
-WHERE pf.name ILIKE $1
-LIMIT $2;
 
 
 
