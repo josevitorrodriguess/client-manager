@@ -17,30 +17,17 @@ type Querier interface {
 	CreateCustomerPJ(ctx context.Context, arg CreateCustomerPJParams) (uuid.UUID, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (uuid.UUID, error)
 	DeleteAddress(ctx context.Context, id int32) error
-	// -- name: UpdateCustomer :one
-	// UPDATE customers
-	// SET email = $2, phone = $3
-	// WHERE id = $1
-	// RETURNING id, email, phone;
 	DeleteCustomer(ctx context.Context, id uuid.UUID) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetAllCustomers(ctx context.Context) ([]Customer, error)
-	GetCustomerAddresses(ctx context.Context, customerID uuid.UUID) ([]Address, error)
-	GetCustomerByEmail(ctx context.Context, email string) (Customer, error)
-	GetCustomerByID(ctx context.Context, id uuid.UUID) (Customer, error)
-	GetCustomerPFDetails(ctx context.Context, id uuid.UUID) (GetCustomerPFDetailsRow, error)
-	GetCustomerPJDetails(ctx context.Context, id uuid.UUID) (GetCustomerPJDetailsRow, error)
-	GetRecentCustomers(ctx context.Context, limit int32) ([]Customer, error)
+	GetCustomerAddresses(ctx context.Context, customerID uuid.UUID) ([]GetCustomerAddressesRow, error)
+	GetCustomerByID(ctx context.Context, id uuid.UUID) (GetCustomerByIDRow, error)
+	GetCustomerDetails(ctx context.Context, id uuid.UUID) ([]GetCustomerDetailsRow, error)
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
-	ListActiveCustomers(ctx context.Context, arg ListActiveCustomersParams) ([]Customer, error)
-	SearchCustomersByEmail(ctx context.Context, arg SearchCustomersByEmailParams) ([]Customer, error)
 	SearchPFCustomersByName(ctx context.Context, arg SearchPFCustomersByNameParams) ([]Customer, error)
 	SearchPJCustomersByCompanyName(ctx context.Context, arg SearchPJCustomersByCompanyNameParams) ([]Customer, error)
-	SetCustomerStatus(ctx context.Context, arg SetCustomerStatusParams) error
 	UpdateAddress(ctx context.Context, arg UpdateAddressParams) (int32, error)
 	UpdateCustomerBasicInfo(ctx context.Context, arg UpdateCustomerBasicInfoParams) (uuid.UUID, error)
-	UpdateCustomerPF(ctx context.Context, arg UpdateCustomerPFParams) (uuid.UUID, error)
-	UpdateCustomerPJ(ctx context.Context, arg UpdateCustomerPJParams) (uuid.UUID, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error)
 }
 
