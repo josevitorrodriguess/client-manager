@@ -13,7 +13,9 @@ import (
 	"go.uber.org/zap"
 )
 
-var ErrDuplicatedData = errors.New("cpf, phone or email already exists")
+var (
+	ErrDuplicatedData = errors.New("cpf, phone or email already exists")
+)
 
 type CustomerService struct {
 	pool    *pgxpool.Pool
@@ -88,7 +90,7 @@ func (cs *CustomerService) CreatePJCustomer(ctx context.Context, customer custom
 	return id, nil
 }
 
-func (cs *CustomerService) AddAddressRequest(ctx context.Context, address customer.AddAddressRequest) (int32, error) {
+func (cs *CustomerService) AddAddressToCustomer(ctx context.Context, address customer.AddAddressRequest) (int32, error) {
 	args := sqlc.AddAddressToCustomerParams{
 		CustomerID:  address.CustomerID,
 		AddressType: address.AddressType,
@@ -108,4 +110,37 @@ func (cs *CustomerService) AddAddressRequest(ctx context.Context, address custom
 	}
 
 	return id, nil
+}
+
+func (cs *CustomerService) GetCustomerDetails(ctx context.Context, id uuid.UUID) (customer.CustomerResponse, error) {
+
+	data, err := cs.queries.GetCustomerByID(ctx, id)
+	if err != nil {
+		logger.Error("Failed to get customer with id:", err)
+		return customer.CustomerResponse{}, err
+	}
+
+	adrs, err := cs.queries.GetCustomerAddresses(ctx, id)
+	if err != nil {
+		logger.Error("failed so search address for this customer", err)
+		return customer.CustomerResponse{}, err
+	}
+
+	addresses := customer.MapAddresses(adrs)
+
+	customerResponse := customer.CustomerResponse{
+		ID:          data.ID,
+		Type:        data.Type,
+		Email:       data.Email,
+		Phone:       data.Phone,
+		IsActive:    data.IsActive,
+		Cpf:         data.Cpf,
+		PfName:      data.PfName,
+		BirthDate:   data.BirthDate,
+		Cnpj:        data.Cnpj,
+		CompanyName: data.CompanyName,
+		Addresses:   addresses,
+	}
+
+	return customerResponse, nil
 }

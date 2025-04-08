@@ -94,11 +94,27 @@ func (api *Api) HandlerAddAddressToCostumer(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		jsonutils.EncodeJson(w, r, http.StatusUnprocessableEntity, err.Error())
 	}
-	id, err := api.CustomerService.AddAddressRequest(r.Context(), data)
+	id, err := api.CustomerService.AddAddressToCustomer(r.Context(), data)
 	if err != nil {
 		_ = jsonutils.EncodeJson(w, r, http.StatusUnprocessableEntity, err)
 		return
 	}
 
 	_ = jsonutils.EncodeJson(w, r, http.StatusCreated, map[string]any{"address_id": id})
+}
+
+func (api *Api) HandlerGetCustomerById(w http.ResponseWriter, r *http.Request) {
+	userID, err := GetAuthenticatedUserID(r.Context(), api.Sessions)
+	if err != nil {
+		// trata: sessão inválida, não autenticado etc.
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	data, err := api.CustomerService.GetCustomerDetails(r.Context(), userID)
+	if err != nil {
+		_ = jsonutils.EncodeJson(w, r, http.StatusNotFound, err)
+		return
+	}
+
+	_ = jsonutils.EncodeJson(w, r, http.StatusOK, data)
 }
