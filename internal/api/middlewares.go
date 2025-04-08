@@ -1,13 +1,30 @@
 package api
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/google/uuid"
 	"github.com/josevitorrodriguess/client-manager/internal/config/logger"
 	"github.com/josevitorrodriguess/client-manager/internal/jsonutils"
 	"go.uber.org/zap"
 )
+
+func GetAuthenticatedUserID(ctx context.Context, session *scs.SessionManager) (uuid.UUID, error) {
+	val := session.GetString(ctx, "AuthenticatedUserId") // já faz type assertion p/ string
+	if val == "" {
+		return uuid.Nil, fmt.Errorf("AuthenticatedUserId not found in session")
+	}
+
+	id, err := uuid.Parse(val)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("invalid UUID in session: %w", err)
+	}
+
+	return id, nil
+}
 
 func (api *Api) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
