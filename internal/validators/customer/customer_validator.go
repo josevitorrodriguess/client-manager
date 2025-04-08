@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/josevitorrodriguess/client-manager/internal/db/sqlc"
 	"github.com/josevitorrodriguess/client-manager/internal/utils"
 )
 
@@ -95,3 +96,31 @@ type AddAddressRequest struct {
 	City        string      `json:"city"`
 	Cep         string      `json:"cep"`
 }
+
+type CustomerResponse struct {
+	ID          uuid.UUID          `json:"id"`
+	Type        sqlc.CustomerType  `json:"type"`
+	Email       string             `json:"email"`
+	Phone       string             `json:"phone"`
+	IsActive    bool               `json:"is_active"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	Cpf         interface{}        `json:"cpf,omitempty"`
+	PfName      interface{}        `json:"pf_name,omitempty"`
+	BirthDate   interface{}        `json:"birth_date,omitempty"`
+	Cnpj        interface{}        `json:"cnpj,omitempty"`
+	CompanyName interface{}        `json:"company_name,omitempty"`
+	Addresses   []AddressResponse  `json:"addresses"`
+}
+
+type AddressResponse struct {
+	ID          int32       `json:"id"`
+	AddressType string      `json:"address_type"`
+	Street      string      `json:"street"`
+	Number      string      `json:"number"`
+	Complement  pgtype.Text `json:"complement"`
+	State       string      `json:"state"`
+	City        string      `json:"city"`
+	Cep         string      `json:"cep"`
+}
+
