@@ -57,13 +57,38 @@ RETURNING customer_id;
 
 
 -- name: GetCustomerByID :one
-SELECT * FROM customers
-WHERE id = $1;
-
-
--- name: GetCustomerByEmail :one
-SELECT * FROM customers
-WHERE email = $1;
+SELECT 
+    c.id,
+    c.type,
+    c.email,
+    c.phone,
+    c.is_active,
+    c.created_at,
+    c.updated_at,
+    CASE 
+        WHEN c.type = 'PF' THEN pf.cpf
+        ELSE NULL
+    END as cpf,
+    CASE 
+        WHEN c.type = 'PF' THEN pf.name
+        ELSE NULL
+    END as pf_name,
+    CASE 
+        WHEN c.type = 'PF' THEN pf.birth_date
+        ELSE NULL
+    END as birth_date,
+    CASE 
+        WHEN c.type = 'PJ' THEN pj.cnpj
+        ELSE NULL
+    END as cnpj,
+    CASE 
+        WHEN c.type = 'PJ' THEN pj.company_name
+        ELSE NULL
+    END as company_name
+FROM customers c
+LEFT JOIN customerf_pf pf ON c.id = pf.customer_id AND c.type = 'PF'
+LEFT JOIN customerf_pj pj ON c.id = pj.customer_id AND c.type = 'PJ'
+WHERE c.id = $1;
 
 
 -- name: AddAddressToCustomer :one
@@ -81,12 +106,6 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING id;
 
 
--- -- name: UpdateCustomer :one
--- UPDATE customers
--- SET email = $2, phone = $3
--- WHERE id = $1
--- RETURNING id, email, phone;
-
 
 -- name: DeleteCustomer :exec
 DELETE FROM customers
@@ -98,22 +117,17 @@ SELECT * FROM customers;
 
 
 -- name: GetCustomerAddresses :many
-SELECT * FROM addresses
+SELECT 
+    id,
+    address_type,
+    street,
+    number,
+    complement,
+    state,
+    city,
+    cep
+FROM addresses
 WHERE customer_id = $1;
-
-
--- name: UpdateCustomerPF :one
-UPDATE customerf_pf
-SET name = $2, cpf = $3, birth_date = $4
-WHERE customer_id = $1
-RETURNING customer_id;
-
-
--- name: UpdateCustomerPJ :one
-UPDATE customerf_pj
-SET company_name = $2, cnpj = $3
-WHERE customer_id = $1
-RETURNING customer_id;
 
 
 -- name: UpdateCustomerBasicInfo :one
@@ -137,8 +151,8 @@ WHERE id = $1
 RETURNING id;
 
 
--- name: GetCustomerPFDetails :one
-SELECT 
+-- name: GetCustomerDetails :many
+SELECT
     c.id,
     c.email,
     c.phone,
@@ -147,45 +161,23 @@ SELECT
     c.is_active,
     pf.cpf,
     pf.name,
-    pf.birth_date
-FROM customers c
-JOIN customerf_pf pf ON c.id = pf.customer_id
-WHERE c.id = $1;
-
-
--- name: GetCustomerPJDetails :one
-SELECT 
-    c.id,
-    c.email,
-    c.phone,
-    c.created_at,
-    c.updated_at,
-    c.is_active,
+    pf.birth_date,
     pj.cnpj,
-    pj.company_name
+    pj.company_name,
+    a.id AS address_id,
+    a.address_type,
+    a.street,
+    a.number,
+    a.complement,
+    a.state,
+    a.city,
+    a.cep
 FROM customers c
-JOIN customerf_pj pj ON c.id = pj.customer_id
-WHERE c.id = $1;
-
-
--- name: ListActiveCustomers :many
-SELECT * FROM customers
-WHERE is_active = true
-ORDER BY created_at DESC
-LIMIT $1 OFFSET $2;
-
-
--- name: SetCustomerStatus :exec
-UPDATE customers
-SET is_active = $2
-WHERE id = $1;
-
-
--- name: SearchCustomersByEmail :many
-SELECT * FROM customers
-WHERE email ILIKE $1
-LIMIT $2;
-
+LEFT JOIN customerf_pf pf ON c.id = pf.customer_id
+LEFT JOIN customerf_pj pj ON c.id = pj.customer_id
+LEFT JOIN addresses a ON c.id = a.customer_id
+WHERE c.id = $1
+ORDER BY a.id;
 
 
 -- name: SearchPJCustomersByCompanyName :many
@@ -207,10 +199,7 @@ WHERE pf.name ILIKE $1
 LIMIT $2;
 
 
--- name: GetRecentCustomers :many
-SELECT * FROM customers
-ORDER BY created_at DESC
-LIMIT $1;
+
 
 
 
