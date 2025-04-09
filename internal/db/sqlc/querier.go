@@ -17,6 +17,7 @@ type Querier interface {
 	CreateCustomerPJ(ctx context.Context, arg CreateCustomerPJParams) (uuid.UUID, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (uuid.UUID, error)
 	DeleteAddress(ctx context.Context, id int32) error
+	DeleteCustomer(ctx context.Context, id uuid.UUID) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetAllCustomers(ctx context.Context) ([]GetAllCustomersRow, error)
 	GetCustomerAddresses(ctx context.Context, customerID uuid.UUID) ([]GetCustomerAddressesRow, error)

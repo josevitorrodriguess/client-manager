@@ -194,6 +194,16 @@ func (q *Queries) DeleteAddress(ctx context.Context, id int32) error {
 	return err
 }
 
+const deleteCustomer = `-- name: DeleteCustomer :exec
+DELETE FROM customers
+WHERE id = $1
+`
+
+func (q *Queries) DeleteCustomer(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteCustomer, id)
+	return err
+}
+
 const getAllCustomers = `-- name: GetAllCustomers :many
 SELECT
     c.id,

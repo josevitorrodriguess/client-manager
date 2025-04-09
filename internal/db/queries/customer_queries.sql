@@ -173,6 +173,10 @@ RETURNING id;
 DELETE FROM addresses
 WHERE id = $1;
 
+-- name: DeleteCustomer :exec
+DELETE FROM customers
+WHERE id = $1;
+
 
 
 
