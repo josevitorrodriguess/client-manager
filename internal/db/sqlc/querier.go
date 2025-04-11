@@ -8,23 +8,34 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
 	AddAddressToCustomer(ctx context.Context, arg AddAddressToCustomerParams) (int32, error)
 	CheckIfUserIsAdmin(ctx context.Context, id uuid.UUID) (bool, error)
+	CountProductsByCustomerID(ctx context.Context, customerID pgtype.UUID) (int64, error)
 	CreateCustomerPF(ctx context.Context, arg CreateCustomerPFParams) (uuid.UUID, error)
 	CreateCustomerPJ(ctx context.Context, arg CreateCustomerPJParams) (uuid.UUID, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (uuid.UUID, error)
 	DeleteAddress(ctx context.Context, id int32) error
 	DeleteCustomer(ctx context.Context, id uuid.UUID) error
+	DeleteProduct(ctx context.Context, id int32) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetAllCustomers(ctx context.Context) ([]GetAllCustomersRow, error)
 	GetCustomerAddresses(ctx context.Context, customerID uuid.UUID) ([]GetCustomerAddressesRow, error)
 	GetCustomerByID(ctx context.Context, id uuid.UUID) (GetCustomerByIDRow, error)
+	GetProductByID(ctx context.Context, id int32) (Product, error)
+	GetProductsByCustomerID(ctx context.Context, customerID pgtype.UUID) ([]Product, error)
+	GetProductsValueSumByCustomerID(ctx context.Context, customerID pgtype.UUID) (int64, error)
+	GetUnfinishedProductsByCustomerID(ctx context.Context, customerID pgtype.UUID) ([]Product, error)
+	GetUnpaidProductsByCustomerID(ctx context.Context, customerID pgtype.UUID) ([]GetUnpaidProductsByCustomerIDRow, error)
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
+	ListAllProducts(ctx context.Context) ([]Product, error)
 	UpdateAddress(ctx context.Context, arg UpdateAddressParams) (int32, error)
 	UpdateCustomerBasicInfo(ctx context.Context, arg UpdateCustomerBasicInfoParams) (uuid.UUID, error)
+	UpdateProductFinishStatus(ctx context.Context, arg UpdateProductFinishStatusParams) (Product, error)
+	UpdateProductPaymentStatus(ctx context.Context, arg UpdateProductPaymentStatusParams) (Product, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error)
 }
 

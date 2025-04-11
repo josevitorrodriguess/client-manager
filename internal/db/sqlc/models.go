@@ -93,6 +93,17 @@ type CustomerfPj struct {
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
 
+type Product struct {
+	ID          int32          `json:"id"`
+	CustomerID  pgtype.UUID    `json:"customer_id"`
+	TypeProduct string         `json:"type_product"`
+	Description string         `json:"description"`
+	TotalValue  pgtype.Numeric `json:"total_value"`
+	DownPayment pgtype.Numeric `json:"down_payment"`
+	IsPaid      pgtype.Bool    `json:"is_paid"`
+	IsFinished  pgtype.Bool    `json:"is_finished"`
+}
+
 type Session struct {
 	Token  string             `json:"token"`
 	Data   []byte             `json:"data"`
