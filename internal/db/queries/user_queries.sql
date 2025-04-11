@@ -10,7 +10,7 @@ SET name = $1, email = $2, password = $3, is_admin = $4
 WHERE id = $4
 RETURNING id, name, email; 
 
-
+ 
 -- name: GetUserByEmail :one
 SELECT 
     id,
