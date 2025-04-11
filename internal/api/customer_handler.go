@@ -131,3 +131,14 @@ func (api *Api) HandleGetAllCustomers(w http.ResponseWriter, r *http.Request) {
 
 	_ = jsonutils.EncodeJson(w, r, http.StatusOK, customers)
 }
+
+func (api *Api) HandlerDeleteCustomer(w http.ResponseWriter, r *http.Request) {
+	id, err := jsonutils.DecodeJson[uuid.UUID](r)
+	if err != nil {
+		_ = jsonutils.EncodeJson(w, r, http.StatusUnprocessableEntity, map[string]any{"error": err})
+	}
+
+	if err = api.CustomerService.DeleteCustomer(r.Context(), id); err != nil {
+		_ = jsonutils.EncodeJson(w,r,http.StatusOK,map[string]any{"message":"Customer Deleted Sucessfully "})
+	}
+}

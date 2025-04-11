@@ -140,3 +140,11 @@ func (cs *CustomerService) GetAllCustomersDetails(ctx context.Context) ([]sqlc.G
 
 	return datas, nil
 }
+
+func (cs *CustomerService) DeleteCustomer(ctx context.Context, id uuid.UUID) error {
+	err := cs.queries.DeleteCustomer(ctx, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
