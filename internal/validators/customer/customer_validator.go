@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/josevitorrodriguess/client-manager/internal/db/sqlc"
 	"github.com/josevitorrodriguess/client-manager/internal/utils"
+	"github.com/josevitorrodriguess/client-manager/internal/validators"
 )
 
 type CustomerPFRequest struct {
@@ -26,30 +27,44 @@ type CustomerPFRequest struct {
 }
 
 func (cPFr *CustomerPFRequest) IsValid() (bool, error) {
+	validationErrs := validators.ValidationErrors{
+		Errors: make(map[string]string),
+	}
+
 	if !(utils.MinChars(cPFr.Name, 5) && utils.MaxChars(cPFr.Name, 100)) {
-		return false, fmt.Errorf("name must have between 5 and 100 characters")
+		validationErrs.Errors["Name"] = "name must have between 5 and 100 characters"
 	}
+
 	if !utils.Matches(cPFr.Email, utils.EmailRegex) {
-		return false, fmt.Errorf("invalid email")
+		validationErrs.Errors["Email"] = "invalid email"
 	}
+
 	if !utils.Matches(cPFr.Phone, utils.PhoneRegex) {
-		return false, fmt.Errorf("invalid phone")
+		validationErrs.Errors["Phone"] = "invalid phone"
 	}
+
 	if !utils.Matches(cPFr.Cpf, utils.CPFRegex) {
-		return false, fmt.Errorf("invalid cpf")
+		validationErrs.Errors["Cpf"] = "invalid cpf"
 	}
+
 	if cPFr.BirthDate.Valid {
 		dateStr := fmt.Sprintf("%04d-%02d-%02d", cPFr.BirthDate.Time.Year(), cPFr.BirthDate.Time.Month(), cPFr.BirthDate.Time.Day())
 		if !utils.Matches(dateStr, utils.BirthDateRegex) {
-			return false, fmt.Errorf("invalid birth date format")
+			validationErrs.Errors["BirthDate"] = "invalid birth date format"
 		}
 	}
+
 	if !utils.Matches(cPFr.Cep, utils.CEPRegex) {
-		return false, fmt.Errorf("invalid cep")
+		validationErrs.Errors["Cep"] = "invalid cep"
 	}
 
-	return true, nil
+	if !validationErrs.HasErrors() {
+		return true, nil
+	}
+
+	return false, validationErrs
 }
+
 
 type CustomerPJRequest struct {
 	Type        string      `json:"type"`
@@ -67,23 +82,35 @@ type CustomerPJRequest struct {
 }
 
 func (cPJr *CustomerPJRequest) IsValid() (bool, error) {
-	if !(utils.MinChars(cPJr.CompanyName, 5) && utils.MaxChars(cPJr.CompanyName, 100)) {
-		return false, fmt.Errorf("company name must have between 5 and 100 characters")
-	}
-	if !utils.Matches(cPJr.Email, utils.EmailRegex) {
-		return false, fmt.Errorf("invalid email")
-	}
-	if !utils.Matches(cPJr.Phone, utils.PhoneRegex) {
-		return false, fmt.Errorf("invalid phone")
-	}
-	if !utils.Matches(cPJr.Cep, utils.CEPRegex) {
-		return false, fmt.Errorf("invalid cep")
-	}
-	if !utils.Matches(cPJr.Cnpj, utils.CNPJRegex) {
-		return false, fmt.Errorf("invalid cnpj")
+	validationErrs := validators.ValidationErrors{
+		Errors: make(map[string]string),
 	}
 
-	return true, nil
+	if !(utils.MinChars(cPJr.CompanyName, 5) && utils.MaxChars(cPJr.CompanyName, 100)) {
+		validationErrs.Errors["CompanyName"] = "company name must have between 5 and 100 characters"
+	}
+
+	if !utils.Matches(cPJr.Email, utils.EmailRegex) {
+		validationErrs.Errors["Email"] = "invalid email"
+	}
+
+	if !utils.Matches(cPJr.Phone, utils.PhoneRegex) {
+		validationErrs.Errors["Phone"] = "invalid phone"
+	}
+
+	if !utils.Matches(cPJr.Cep, utils.CEPRegex) {
+		validationErrs.Errors["Cep"] = "invalid cep"
+	}
+
+	if !utils.Matches(cPJr.Cnpj, utils.CNPJRegex) {
+		validationErrs.Errors["Cnpj"] = "invalid cnpj"
+	}
+
+	if !validationErrs.HasErrors() {
+		return true, nil
+	}
+
+	return false, validationErrs
 }
 
 type AddAddressRequest struct {
@@ -123,4 +150,3 @@ type AddressResponse struct {
 	City        string      `json:"city"`
 	Cep         string      `json:"cep"`
 }
-
