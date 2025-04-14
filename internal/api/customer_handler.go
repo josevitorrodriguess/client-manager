@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/josevitorrodriguess/client-manager/internal/config/logger"
 	"github.com/josevitorrodriguess/client-manager/internal/jsonutils"
@@ -105,11 +106,15 @@ func (api *Api) HandlerAddAddressToCostumer(w http.ResponseWriter, r *http.Reque
 }
 
 func (api *Api) HandlerGetCustomerById(w http.ResponseWriter, r *http.Request) {
-	ID, err := jsonutils.DecodeJson[uuid.UUID](r)
+	ID := chi.URLParam(r, "id")
+
+	customerID, err := uuid.Parse(ID)
 	if err != nil {
-		_ = jsonutils.EncodeJson(w, r, http.StatusUnprocessableEntity, map[string]any{"error": err})
+		http.Error(w, "invalid customer id", http.StatusBadRequest)
+		return
 	}
-	customer, err := api.CustomerService.GetCustomerDetails(r.Context(), ID)
+
+	customer, err := api.CustomerService.GetCustomerDetails(r.Context(), customerID)
 	if err != nil {
 		_ = jsonutils.EncodeJson(w, r, http.StatusNotFound, map[string]any{"error": err})
 		return
@@ -139,6 +144,6 @@ func (api *Api) HandlerDeleteCustomer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = api.CustomerService.DeleteCustomer(r.Context(), id); err != nil {
-		_ = jsonutils.EncodeJson(w,r,http.StatusOK,map[string]any{"message":"Customer Deleted Sucessfully "})
+		_ = jsonutils.EncodeJson(w, r, http.StatusOK, map[string]any{"message": "Customer Deleted Sucessfully "})
 	}
 }
