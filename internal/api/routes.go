@@ -14,12 +14,13 @@ func (api *Api) BindRoutes() {
 				r.Post("/login", api.LoginUserHandler)
 				r.With(api.AuthMiddleware).Post("/logout", api.LogoutUserHandler)
 			})
+
 			r.Route("/customers", func(r chi.Router) {
-				r.With(api.AuthMiddleware, api.AdminMiddleware).Post("/PFcustomer", api.HandlerCreatePFCustomer)
-				r.With(api.AuthMiddleware, api.AdminMiddleware).Post("/PJcustomer", api.HandlerCreatePJCustomer)
-				r.With(api.AuthMiddleware, api.AdminMiddleware).Post("/addAddress", api.HandlerAddAddressToCostumer)
-				r.With(api.AuthMiddleware, api.AdminMiddleware).Get("/getById/{id}", api.HandlerGetCustomerById)
-				r.With(api.AuthMiddleware, api.AdminMiddleware).Get("/getAll", api.HandleGetAllCustomers)
+				r.Post("/pf", api.HandlerCreatePFCustomer)
+				r.Post("/pj", api.HandlerCreatePJCustomer)
+				r.Post("/address", api.HandlerAddAddressToCostumer)
+				r.Get("/{id}", api.HandlerGetCustomerById)
+				r.Get("/", api.HandleGetAllCustomers)
 			})
 		})
 	})
