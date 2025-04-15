@@ -1,6 +1,7 @@
 package customer
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -64,7 +65,6 @@ func (cPFr *CustomerPFRequest) IsValid() (bool, error) {
 
 	return false, validationErrs
 }
-
 
 type CustomerPJRequest struct {
 	Type        string      `json:"type"`
@@ -138,6 +138,51 @@ type CustomerResponse struct {
 	Cnpj        interface{}        `json:"cnpj,omitempty"`
 	CompanyName interface{}        `json:"company_name,omitempty"`
 	Addresses   []AddressResponse  `json:"addresses"`
+}
+
+func MapToCustomerResponse(row sqlc.GetAllCustomersRow) (*CustomerResponse, error) {
+	var addresses []AddressResponse
+	var addressesJSON string
+
+	// Verifica o tipo real de row.Addresses e faz o tratamento adequado
+	switch v := row.Addresses.(type) {
+	case string:
+		// Se já for uma string, use diretamente
+		addressesJSON = v
+	case []interface{}:
+		// Se for um slice de interfaces, converta para JSON
+		jsonBytes, err := json.Marshal(v)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal addresses slice: %w", err)
+		}
+		addressesJSON = string(jsonBytes)
+	case []byte:
+		// Se for um slice de bytes, converta para string
+		addressesJSON = string(v)
+	default:
+		// Caso seja outro tipo, trate como erro
+		return nil, fmt.Errorf("unexpected type for addresses: %T", row.Addresses)
+	}
+
+	// Agora que temos uma string JSON, podemos fazer o Unmarshal
+	if err := json.Unmarshal([]byte(addressesJSON), &addresses); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal addresses: %w", err)
+	}
+
+	return &CustomerResponse{
+		ID:          row.CustomerID,
+		Email:       row.CustomerEmail,
+		Phone:       row.CustomerPhone,
+		CreatedAt:   row.CustomerCreatedAt,
+		UpdatedAt:   row.CustomerUpdatedAt,
+		IsActive:    row.CustomerIsActive,
+		Cpf:         row.PfCpf,
+		PfName:      row.PfName,
+		BirthDate:   row.PfBirthDate,
+		Cnpj:        row.PjCnpj,
+		CompanyName: row.PjCompanyName,
+		Addresses:   addresses,
+	}, nil
 }
 
 type AddressResponse struct {
