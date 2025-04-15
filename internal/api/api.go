@@ -10,5 +10,6 @@ type Api struct {
 	Router          *chi.Mux
 	UserService     services.UserService
 	CustomerService services.CustomerService
+	ServiceService  services.ServiceService
 	Sessions        *scs.SessionManager
 }

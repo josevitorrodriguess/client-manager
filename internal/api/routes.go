@@ -22,6 +22,16 @@ func (api *Api) BindRoutes() {
 				r.Get("/{id}", api.HandlerGetCustomerById)
 				r.Get("/", api.HandleGetAllCustomers)
 			})
+
+			r.Route("/services", func(r chi.Router) {
+				r.Post("/", api.HandlerCreateService)
+				r.Get("/", api.HandlerListAllServices)
+				r.Get("/customer/{id}", api.HandlerGetServicesByCustomerID)
+				r.Get("/count/{id}", api.HandlerCountServicesByCustomerID)
+				r.Delete("/", api.HandlerDeleteService)
+				r.Patch("/finish", api.HandlerUpdateServiceFinishStatus)
+				r.Patch("/payment", api.HandlerUpdateServicePaymentStatus)
+			})
 		})
 	})
 }
