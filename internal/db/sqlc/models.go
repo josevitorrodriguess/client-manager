@@ -93,7 +93,7 @@ type CustomerfPj struct {
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
 
-type Product struct {
+type Service struct {
 	ID          int32          `json:"id"`
 	CustomerID  pgtype.UUID    `json:"customer_id"`
 	TypeProduct string         `json:"type_product"`

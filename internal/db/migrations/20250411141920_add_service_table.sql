@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 SELECT 'up SQL query';
 -- +goose StatementEnd
-CREATE TABLE products (
+CREATE TABLE services (
     id SERIAL PRIMARY KEY,
     customer_id UUID REFERENCES customers(id),
     type_product VARCHAR(255) NOT NULL,
@@ -17,4 +17,4 @@ CREATE TABLE products (
 -- +goose StatementBegin
 SELECT 'down SQL query';
 -- +goose StatementEnd
-DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS services;

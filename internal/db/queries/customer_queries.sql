@@ -106,32 +106,49 @@ WHERE c.id = $1;
 
 
 
+
 -- name: GetAllCustomers :many
 SELECT
-    c.id,
-    c.email,
-    c.phone,
-    c.created_at,
-    c.updated_at,
-    c.is_active,
-    pf.cpf,
-    pf.name,
-    pf.birth_date,
-    pj.cnpj,
-    pj.company_name,
-    a.id AS address_id,
-    a.address_type,
-    a.street,
-    a.number,
-    a.complement,
-    a.state,
-    a.city,
-    a.cep
+    c.id AS customer_id,
+    c.email AS customer_email,
+    c.phone AS customer_phone,
+    c.created_at AS customer_created_at,
+    c.updated_at AS customer_updated_at,
+    c.is_active AS customer_is_active,
+
+    pf.cpf AS pf_cpf,
+    pf.name AS pf_name,
+    pf.birth_date AS pf_birth_date,
+
+    pj.cnpj AS pj_cnpj,
+    pj.company_name AS pj_company_name,
+
+    COALESCE(
+        JSON_AGG(
+            JSON_BUILD_OBJECT(
+                'address_id', a.id,
+                'address_type', a.address_type,
+                'street', a.street,
+                'number', a.number,
+                'complement', a.complement,
+                'state', a.state,
+                'city', a.city,
+                'cep', a.cep
+            )
+        ) FILTER (WHERE a.id IS NOT NULL),
+        '[]'
+    ) AS addresses
 FROM customers c
 LEFT JOIN customerf_pf pf ON c.id = pf.customer_id
 LEFT JOIN customerf_pj pj ON c.id = pj.customer_id
 LEFT JOIN addresses a ON c.id = a.customer_id
-ORDER BY c.id, a.id;
+GROUP BY 
+    c.id, c.email, c.phone, c.created_at, c.updated_at, c.is_active,
+    pf.cpf, pf.name, pf.birth_date,
+    pj.cnpj, pj.company_name
+ORDER BY c.id;
+
+
 
 
 -- name: GetCustomerAddresses :many

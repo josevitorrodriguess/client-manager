@@ -206,53 +206,61 @@ func (q *Queries) DeleteCustomer(ctx context.Context, id uuid.UUID) error {
 
 const getAllCustomers = `-- name: GetAllCustomers :many
 SELECT
-    c.id,
-    c.email,
-    c.phone,
-    c.created_at,
-    c.updated_at,
-    c.is_active,
-    pf.cpf,
-    pf.name,
-    pf.birth_date,
-    pj.cnpj,
-    pj.company_name,
-    a.id AS address_id,
-    a.address_type,
-    a.street,
-    a.number,
-    a.complement,
-    a.state,
-    a.city,
-    a.cep
+    c.id AS customer_id,
+    c.email AS customer_email,
+    c.phone AS customer_phone,
+    c.created_at AS customer_created_at,
+    c.updated_at AS customer_updated_at,
+    c.is_active AS customer_is_active,
+
+    pf.cpf AS pf_cpf,
+    pf.name AS pf_name,
+    pf.birth_date AS pf_birth_date,
+
+    pj.cnpj AS pj_cnpj,
+    pj.company_name AS pj_company_name,
+
+    COALESCE(
+        JSON_AGG(
+            JSON_BUILD_OBJECT(
+                'address_id', a.id,
+                'address_type', a.address_type,
+                'street', a.street,
+                'number', a.number,
+                'complement', a.complement,
+                'state', a.state,
+                'city', a.city,
+                'cep', a.cep
+            )
+        ) FILTER (WHERE a.id IS NOT NULL),
+        '[]'
+    ) AS addresses
 FROM customers c
 LEFT JOIN customerf_pf pf ON c.id = pf.customer_id
 LEFT JOIN customerf_pj pj ON c.id = pj.customer_id
 LEFT JOIN addresses a ON c.id = a.customer_id
-ORDER BY c.id, a.id
+GROUP BY 
+    c.id, c.email, c.phone, c.created_at, c.updated_at, c.is_active,
+    pf.cpf, pf.name, pf.birth_date,
+    pj.cnpj, pj.company_name
+ORDER BY c.id
 `
 
 type GetAllCustomersRow struct {
-	ID          uuid.UUID          `json:"id"`
-	Email       string             `json:"email"`
-	Phone       string             `json:"phone"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
-	IsActive    bool               `json:"is_active"`
-	Cpf         pgtype.Text        `json:"cpf"`
-	Name        pgtype.Text        `json:"name"`
-	BirthDate   pgtype.Date        `json:"birth_date"`
-	Cnpj        pgtype.Text        `json:"cnpj"`
-	CompanyName pgtype.Text        `json:"company_name"`
-	AddressID   pgtype.Int4        `json:"address_id"`
-	AddressType pgtype.Text        `json:"address_type"`
-	Street      pgtype.Text        `json:"street"`
-	Number      pgtype.Text        `json:"number"`
-	Complement  pgtype.Text        `json:"complement"`
-	State       pgtype.Text        `json:"state"`
-	City        pgtype.Text        `json:"city"`
-	Cep         pgtype.Text        `json:"cep"`
+	CustomerID        uuid.UUID          `json:"customer_id"`
+	CustomerEmail     string             `json:"customer_email"`
+	CustomerPhone     string             `json:"customer_phone"`
+	CustomerCreatedAt pgtype.Timestamptz `json:"customer_created_at"`
+	CustomerUpdatedAt pgtype.Timestamptz `json:"customer_updated_at"`
+	CustomerIsActive  bool               `json:"customer_is_active"`
+	PfCpf             pgtype.Text        `json:"pf_cpf"`
+	PfName            pgtype.Text        `json:"pf_name"`
+	PfBirthDate       pgtype.Date        `json:"pf_birth_date"`
+	PjCnpj            pgtype.Text        `json:"pj_cnpj"`
+	PjCompanyName     pgtype.Text        `json:"pj_company_name"`
+	Addresses         interface{}        `json:"addresses"`
 }
+
 
 func (q *Queries) GetAllCustomers(ctx context.Context) ([]GetAllCustomersRow, error) {
 	rows, err := q.db.Query(ctx, getAllCustomers)
@@ -264,25 +272,18 @@ func (q *Queries) GetAllCustomers(ctx context.Context) ([]GetAllCustomersRow, er
 	for rows.Next() {
 		var i GetAllCustomersRow
 		if err := rows.Scan(
-			&i.ID,
-			&i.Email,
-			&i.Phone,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.IsActive,
-			&i.Cpf,
-			&i.Name,
-			&i.BirthDate,
-			&i.Cnpj,
-			&i.CompanyName,
-			&i.AddressID,
-			&i.AddressType,
-			&i.Street,
-			&i.Number,
-			&i.Complement,
-			&i.State,
-			&i.City,
-			&i.Cep,
+			&i.CustomerID,
+			&i.CustomerEmail,
+			&i.CustomerPhone,
+			&i.CustomerCreatedAt,
+			&i.CustomerUpdatedAt,
+			&i.CustomerIsActive,
+			&i.PfCpf,
+			&i.PfName,
+			&i.PfBirthDate,
+			&i.PjCnpj,
+			&i.PjCompanyName,
+			&i.Addresses,
 		); err != nil {
 			return nil, err
 		}
