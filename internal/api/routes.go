@@ -16,9 +16,9 @@ func (api *Api) BindRoutes() {
 			})
 
 			r.Route("/customers", func(r chi.Router) {
-				r.Post("/pf", api.HandlerCreatePFCustomer)
-				r.Post("/pj", api.HandlerCreatePJCustomer)
-				r.Post("/address", api.HandlerAddAddressToCostumer)
+				r.With(api.AuthMiddleware, api.AdminMiddleware).Post("/pf", api.HandlerCreatePFCustomer)
+				r.With(api.AuthMiddleware, api.AdminMiddleware).Post("/pj", api.HandlerCreatePJCustomer)
+				r.With(api.AuthMiddleware, api.AdminMiddleware).Post("/address", api.HandlerAddAddressToCostumer)
 				r.Get("/{id}", api.HandlerGetCustomerById)
 				r.Get("/", api.HandleGetAllCustomers)
 			})

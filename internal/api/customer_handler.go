@@ -128,10 +128,13 @@ func (api *Api) HandlerGetCustomerById(w http.ResponseWriter, r *http.Request) {
 func (api *Api) HandleGetAllCustomers(w http.ResponseWriter, r *http.Request) {
 	customers, err := api.CustomerService.GetAllCustomersDetails(r.Context())
 	if err != nil {
-		_ = jsonutils.EncodeJson(w, r, http.StatusNotFound, map[string]any{"error": err})
+		_ = jsonutils.EncodeJson(w, r, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		return
 	}
+
 	if len(customers) == 0 {
 		_ = jsonutils.EncodeJson(w, r, http.StatusOK, map[string]any{"message": "no customers found"})
+		return
 	}
 
 	_ = jsonutils.EncodeJson(w, r, http.StatusOK, customers)

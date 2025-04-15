@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -131,14 +132,23 @@ func (cs *CustomerService) GetCustomerDetails(ctx context.Context, id uuid.UUID)
 	return customerResponse, nil
 }
 
-func (cs *CustomerService) GetAllCustomersDetails(ctx context.Context) ([]sqlc.GetAllCustomersRow, error) {
+func (cs *CustomerService) GetAllCustomersDetails(ctx context.Context) ([]customer.CustomerResponse, error) {
 
-	datas, err := cs.queries.GetAllCustomers(ctx)
+	rows, err := cs.queries.GetAllCustomers(ctx)
 	if err != nil {
-		return []sqlc.GetAllCustomersRow{}, err
+		return nil, err
 	}
 
-	return datas, nil
+	var customers []customer.CustomerResponse
+	for _, row := range rows {
+		customerResponse, err := customer.MapToCustomerResponse(row)
+		if err != nil {
+			return nil, fmt.Errorf("failed to map customer data: %w", err)
+		}
+		customers = append(customers, *customerResponse)
+	}
+
+	return customers, nil
 }
 
 func (cs *CustomerService) DeleteCustomer(ctx context.Context, id uuid.UUID) error {
